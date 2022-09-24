@@ -14,10 +14,10 @@ void setup() {
 }
 
 const char saturation = 255;
-const char rainbow_brightness = 128;
+const char rainbow_brightness = 100;
 const char speed = 10;
 
-uint32_t meteor_color = strip.Color(255, 0, 0);
+uint32_t meteor_color = strip.Color(50, 0, 0);
 const char meteor_length = 10;
 const short meteor_constant = 65535 / (PIXELS + meteor_length);
 
