@@ -13,28 +13,41 @@ void setup() {
 	strip.begin();
 }
 
-const char saturation = 255;
-const char rainbow_brightness = 100;
-const char speed = 10;
+// CONFIG //
+const unsigned char rainbow_saturation = 255;
+const unsigned char rainbow_brightness = 100;
+const double rainbow_speed = 10;
 
 uint32_t meteor_color = strip.Color(50, 0, 0);
-const char meteor_length = 10;
-const short meteor_constant = 65535 / (PIXELS + meteor_length);
+const unsigned char meteor_length = 10;
+const unsigned char meteor_pixels = PIXELS + meteor_length;
+const double meteor_speed = 0.1;
 
-unsigned short i = 0;
+// RUNTIME //
+unsigned long time = 0;
+unsigned long previous_time = 0;
+
+unsigned short ri = 0;
+short mi = 0;
 
 void loop() {
+	time = micros();
+	const double delta_time = (time - previous_time);
+	previous_time = time;
+
+	ri += (rainbow_speed / 1000) * delta_time;
+	mi += (meteor_speed / 1000) * delta_time;
+	while (mi >= meteor_pixels) {
+		mi -= meteor_pixels + meteor_length;
+	}
+
 	// Rainbow
-	strip.rainbow(i, 1, saturation, rainbow_brightness);
+	strip.rainbow(ri, 1, rainbow_saturation, rainbow_brightness);
 
 	// Meteor
-	short local_constant = i / meteor_constant;
-	for (int j = local_constant; j > local_constant - meteor_length; j--) {
+	for (int j = mi; j > mi - meteor_length; j--) {
 		strip.setPixelColor(j, meteor_color);
 	}
 
 	strip.show();
-	delay(speed);
-
-	i += 256;
 }
