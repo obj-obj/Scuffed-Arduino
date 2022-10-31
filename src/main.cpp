@@ -14,51 +14,96 @@ void setup() {
 }
 
 // CONFIG //
-const unsigned char rainbow_saturation = 255;
-const unsigned char rainbow_brightness = 255;
 double rainbow_speed = 0.02;
 
 const unsigned char meteor_length = 10;
 const unsigned char meteor_pixels = PIXELS + meteor_length;
-double meteor_speed = 0.0001;
+uint32_t meteor_color = strip.Color(100, 100, 100);
+double meteor_speed = 0.0005;
+double meteor_currspeed;
 
 // RUNTIME //
 unsigned long time = 0;
 unsigned long previous_time = 0;
+double delta_time;
 
 unsigned short ri = 0;
-double mi = 0;
+
+void frame_setup() {
+	time = micros();
+	delta_time = (time - previous_time);
+	previous_time = time;
+}
+
+void frame_end() {
+	strip.show();
+}
+
+void rainbow() {
+	ri += rainbow_speed * delta_time;
+	strip.rainbow(ri, 1, 255, 100);
+}
+
+void chargeup_meteor(double ending_speed) {
+	double mi = 0;
+	while (mi < meteor_pixels) {
+		frame_setup();
+		rainbow();
+
+		meteor_currspeed = meteor_speed * (((meteor_pixels - mi) / meteor_pixels) + ending_speed);
+
+		mi += meteor_currspeed * delta_time;
+
+		for (int i = mi; i > mi - meteor_length; i--) {
+			strip.setPixelColor(i, meteor_color);
+		}
+
+		frame_end();
+	}
+}
+
+void blocks() {
+	int iterations = PIXELS / meteor_length;
+
+	for (int i = 0; i <= iterations; i++) {
+		int stop = PIXELS - (i * meteor_length);
+
+		for (double j = 0; j < stop; j += meteor_speed * delta_time * 1.1) {
+			frame_setup();
+			rainbow();
+
+			for (int l = PIXELS; l > stop; l--) {
+				strip.setPixelColor(l, meteor_color);
+			}
+
+			for (int l = j; l > j - meteor_length; l--) {
+				strip.setPixelColor(l, meteor_color);
+			}
+
+			frame_end();
+		}
+	}
+}
 
 void loop() {
-	time = micros();
-	const double delta_time = (time - previous_time);
-	previous_time = time;
-
-	ri += rainbow_speed * delta_time;
-	mi += meteor_speed * delta_time;
-	while (mi >= meteor_pixels) {
-		mi -= meteor_pixels + meteor_length;
+	for (double i = 0.1; i < 1; i += 0.1) {
+		chargeup_meteor(i);
 	}
+	blocks();
 
-	// Rainbow
-	strip.rainbow(ri, 1, rainbow_saturation, rainbow_brightness);
-
-	// Meteor
-	for (int j = mi; j > mi - meteor_length; j--) {
-		strip.setPixelColor(j, strip.Color(255, 0, 0));
-	}
-
-	strip.show();
-
+	/*
 	// Serial parsing
 	if (Serial.available() > 0) {
 		String inp = Serial.readString();
+		String cmd = inp.substring(0, 2);
+		double val = (double)atoi(inp.substring(3).c_str());
 
-		if (inp.startsWith("rs")) {
-			rainbow_speed = ((double)atoi(inp.substring(3).c_str())) / 1000;
+		if (cmd == "rs") {
+			rainbow_speed = val / 1000;
 		}
-		else if (inp.startsWith("ms")) {
-			meteor_speed = ((double)atoi(inp.substring(3).c_str())) / 100000;
+		else if (cmd == "ms") {
+			meteor_speed = val / 10000;
 		}
 	}
+	*/
 }
