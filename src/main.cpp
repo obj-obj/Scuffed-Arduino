@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
-#define LED 9
+#define LED 7
 #define PIXELS 144
 
 Adafruit_NeoPixel strip(PIXELS, LED, NEO_GRB + NEO_KHZ800);
@@ -18,8 +18,8 @@ double rainbow_speed = 0.02;
 
 const unsigned char meteor_length = 10;
 const unsigned char meteor_pixels = PIXELS + meteor_length;
-uint32_t meteor_color = strip.Color(100, 100, 100);
-double meteor_speed = 0.0005;
+uint32_t meteor_color = strip.Color(200, 200, 200);
+double meteor_speed = 0.001;
 double meteor_currspeed;
 
 // RUNTIME //
@@ -41,7 +41,7 @@ void frame_end() {
 
 void rainbow() {
 	ri += rainbow_speed * delta_time;
-	strip.rainbow(ri, 1, 255, 100);
+	strip.rainbow(ri, 1, 255, 200);
 }
 
 void chargeup_meteor(double ending_speed) {
@@ -86,24 +86,20 @@ void blocks() {
 }
 
 void loop() {
-	for (double i = 0.1; i < 1; i += 0.1) {
-		chargeup_meteor(i);
-	}
-	blocks();
+	frame_setup();
+	rainbow();
+	frame_end();
 
-	/*
 	// Serial parsing
 	if (Serial.available() > 0) {
 		String inp = Serial.readString();
-		String cmd = inp.substring(0, 2);
-		double val = (double)atoi(inp.substring(3).c_str());
 
-		if (cmd == "rs") {
-			rainbow_speed = val / 1000;
-		}
-		else if (cmd == "ms") {
-			meteor_speed = val / 10000;
+		if (inp.indexOf("g") != -1) {
+			for (double i = 0.1; i < 1; i += 0.1) {
+				chargeup_meteor(i);
+			}
+			blocks();
+			Serial.print("slay");
 		}
 	}
-	*/
 }
